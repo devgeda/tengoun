@@ -1,0 +1,51 @@
+name: Dart
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+    
+jobs:
+  build:
+  
+    runs-on: ubuntu-latest
+    
+    container:
+          image:  google/dart:latest
+
+    steps:
+            - uses: actions/checkout@v3
+            - name: initial Settings
+              run: |
+                apt update 
+                apt-get install curl -y
+                apt-get install git -y
+                apt-get install unzip -y
+                apt-get install zip -y
+                apt-get install xz-utils
+                
+            - name: Mount Flutter
+              run: git clone -b master https://github.com/flutter/flutter.git
+              
+            - name: Flutter Version
+              run: ./flutter/bin/flutter --version
+              
+            - name: Install Dependencies
+              run: flutter/bin/flutter packages get
+              
+            - name: Enable Web App
+              run: flutter/bin/flutter config --enable-web
+              
+            - name: Run Tests
+              run: flutter/bin/flutter test
+              
+            - name: Build App
+              run: flutter/bin/flutter build web
+              
+            - name: Deploy to Firebase
+              uses: w9jds/firebase-action@master
+              with:
+                args: deploy --only hosting
+              env:
+                FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
